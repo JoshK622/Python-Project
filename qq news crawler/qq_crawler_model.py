@@ -7,18 +7,14 @@ from selenium.webdriver.common.by import By
 import pandas as pd
 import numpy as np
 import time
-import datetime
 s = Service(
     'C:\Program Files\Google\Chrome\Application\chromedriver_win32\chromedriver.exe')
 
-chrome_options = Options()
-chrome_options.add_argument('--headless')
-chrome_options.add_argument('--disable-gpu')
-
 
 class qq_model():
-    def __init__(self):
-        self.url = "https://news.qq.com/"
+    def __init__(self, url, field):
+        self.url = url
+        self.field = field
         self.browser = webdriver.Chrome(service=s)
 
     def enter_main_website(self):
@@ -118,7 +114,7 @@ class qq_model():
             external_links.append(self.get_external_links())
             post_time.append(self.get_post_time())
             count += 1
-            print("Progress: ", str(count), "/", str(length))
+            print("Field: ", self.field, "\nProgress: ", count, "/", length)
         return pd.Series(post_time), pd.Series(content), pd.Series(external_links)
 
     def xpath_exist(self, xpath):
@@ -149,7 +145,6 @@ class qq_model():
             temp_height = check_height
 
     def run(self):
-        current_time = datetime.datetime.now()
         self.enter_main_website()
         Id = self.get_id()
         Url = self.get_links()
@@ -158,9 +153,7 @@ class qq_model():
         Author = self.get_author()
         Publish_Date = self.get_date(Id)
         Post_time, Content, Recommendation_links = self.enter_art_site(Url)
-        result = pd.DataFrame({"Id": Id, "Url": Url, "Title": Title, "Author": Author, "Publish_Date": Publish_Date,
+        result = pd.DataFrame({"Tag": self.field, "Id": Id, "Url": Url, "Title": Title, "Author": Author, "Publish_Date": Publish_Date,
                                "Post_time": Post_time, "Content": Content, "Recommendation_links": Recommendation_links})
         self.browser.quit()
-        end_time = datetime.datetime.now()
-        print("Running Time: ", str(end_time - current_time))
         return result.transpose()  # return the Pandas DataFrame
