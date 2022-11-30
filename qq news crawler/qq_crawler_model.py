@@ -9,20 +9,27 @@ import numpy as np
 import time
 s = Service(
     'C:\Program Files\Google\Chrome\Application\chromedriver_win32\chromedriver.exe')
+more_xpath = "/html/body/div[1]/div[3]/div/div/div[1]"
 
 
 class qq_model():
-    def __init__(self, url, field):
-        self.url = url
+    def __init__(self, xpath, field):
+        self.xpath = xpath
         self.field = field
         self.browser = webdriver.Chrome(service=s)
 
     def enter_main_website(self):
-        self.browser.get(self.url)
+        self.browser.get("https://www.qq.com/")
+        while self.xpath_exist(self.xpath) == False or self.xpath_exist(more_xpath) == False:
+            pass
+        self.browser.find_element(By.XPATH, more_xpath).click()
+        self.browser.find_element(By.XPATH, self.xpath).click()
+        self.browser.switch_to.window(self.browser.window_handles[1])
+        time.sleep(1)
         self.scroll_to_bottom()
 
     def get_links(self):
-        xpath = '//ul[@class = "list"]//li[@class = "item cf itme-ls"]\
+        xpath = '//li[@class = "item cf itme-ls"]\
                 //div[@class = "detail"]//h3//a'
         if self.xpath_exist(xpath) == False:
             return np.NAN
@@ -33,7 +40,7 @@ class qq_model():
         return pd.Series(arr)
 
     def get_title(self):
-        xpath = '//ul[@class = "list"]//li[@class = "item cf itme-ls"]\
+        xpath = '//li[@class = "item cf itme-ls"]\
                 //div[@class = "detail"]//h3//a[@href]'
         if self.xpath_exist(xpath) == False:
             return np.NAN
@@ -70,7 +77,7 @@ class qq_model():
         return post_time
 
     def get_author(self):
-        xpath = '//ul[@class = "list"]//li[@class = "item cf itme-ls"]\
+        xpath = '//li[@class = "item cf itme-ls"]\
                 //div[@class = "detail"]//div[@class = "binfo cf"]//div[@class = "fl"]//a'
         if self.xpath_exist(xpath) == False:
             return np.NAN
@@ -155,5 +162,4 @@ class qq_model():
         Post_time, Content, Recommendation_links = self.enter_art_site(Url)
         result = pd.DataFrame({"Tag": self.field, "Id": Id, "Url": Url, "Title": Title, "Author": Author, "Publish_Date": Publish_Date,
                                "Post_time": Post_time, "Content": Content, "Recommendation_links": Recommendation_links})
-        self.browser.quit()
         return result.transpose()  # return the Pandas DataFrame
